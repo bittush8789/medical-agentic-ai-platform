@@ -108,19 +108,9 @@ class PatientMemoryManager:
             "updated_at": now
         }
 
-        # 1. Save to SQLite for durability
-        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        try:
-            with conn:
-                conn.execute(
-                    """
-                    INSERT INTO patient_long_term_memory (id, user_id, category, content, confidence, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (memory_id, user_id, category, content.strip(), confidence, now, now)
-                )
-        finally:
-            conn.close()
+        # 1. Save to Database (AWS RDS PostgreSQL or SQLite fallback)
+        from app.db import db
+        db.insert_memory(memory_id, user_id, category, content.strip(), confidence, now)
 
         # 2. Invalidate / update Redis cache
         self._invalidate_redis_cache(user_id)
@@ -148,25 +138,9 @@ class PatientMemoryManager:
             except Exception:
                 pass
 
-        # Fetch from SQLite
-        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        try:
-            cursor = conn.cursor()
-            if category:
-                cursor.execute(
-                    "SELECT * FROM patient_long_term_memory WHERE user_id = ? AND category = ? ORDER BY created_at DESC",
-                    (user_id, category)
-                )
-            else:
-                cursor.execute(
-                    "SELECT * FROM patient_long_term_memory WHERE user_id = ? ORDER BY created_at DESC",
-                    (user_id,)
-                )
-            rows = cursor.fetchall()
-            memories = [dict(r) for r in rows]
-        finally:
-            conn.close()
+        # Fetch from Database (AWS RDS PostgreSQL or SQLite fallback)
+        from app.db import db
+        memories = db.select_memories(user_id=user_id, category=category)
 
         # Cache in Redis for 1 hour
         try:
@@ -178,16 +152,8 @@ class PatientMemoryManager:
 
     def delete_memory(self, user_id: str, memory_id: str) -> bool:
         """Removes a specific memory item."""
-        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        try:
-            with conn:
-                cursor = conn.execute(
-                    "DELETE FROM patient_long_term_memory WHERE id = ? AND user_id = ?",
-                    (memory_id, user_id)
-                )
-                deleted = cursor.rowcount > 0
-        finally:
-            conn.close()
+        from app.db import db
+        deleted = db.delete_memory(memory_id=memory_id, user_id=user_id)
 
         if deleted:
             self._invalidate_redis_cache(user_id)
@@ -253,22 +219,17 @@ class PatientMemoryManager:
 
     def get_status(self) -> Dict[str, Any]:
         """Status dictionary for /api/memory and /api/health."""
-        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*), COUNT(DISTINCT user_id) FROM patient_long_term_memory")
-            total_records, unique_users = cursor.fetchone()
-        except Exception:
-            total_records, unique_users = 0, 0
-        finally:
-            conn.close()
+        from app.db import db
+        total_records, unique_users = db.get_memory_stats()
+        db_info = db.get_status()
 
         return {
             "status": "active" if getattr(settings, 'enable_langmem', True) else "disabled",
             "framework": "LangMem (Long-Term Patient Semantic Memory)",
             "storage": {
                 "fast_cache": "redis" if redis_manager.is_connected else "in_memory",
-                "persistent_db": "sqlite (medical_memory.db)"
+                "persistent_db": db_info["engine"],
+                "target": db_info["db_target"]
             },
             "stats": {
                 "total_memories_stored": total_records,

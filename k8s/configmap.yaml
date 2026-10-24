@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medguide-config
+  namespace: medguide-prod
+data:
+  CHAT_MODEL: "gemini/gemini-2.5-flash"
+  FALLBACK_MODELS: "claude-3-5-sonnet-20241022,gpt-4.1-mini,gemini/gemini-2.0-flash"
+  MAX_FALLBACK_RETRIES: "3"
+  GATEWAY_TIMEOUT: "45"
+  PINECONE_INDEX: "medical-agent-demo"
+  ENABLE_AUDIT_LOGGING: "true"
+  ENABLE_GUARDRAILS: "true"
+  ENABLE_PRESIDIO_PII: "true"
+  ENABLE_NEMO_GUARDRAILS: "true"
+  ENABLE_AGENT_GOVERNANCE: "true"
+  MAX_TOOL_CALLS_PER_TURN: "6"
+  RATE_LIMIT_RPM: "60"
+  ENABLE_LANGMEM: "true"
+  ENABLE_REDIS_CACHE: "true"
+  ENABLE_AI_SECURITY: "true"
+  ENABLE_INDIRECT_INJECTION_DEFENSE: "true"
+  ENABLE_MEMORY_POISONING_DEFENSE: "true"
+  ENABLE_EXFILTRATION_DEFENSE: "true"
+  ALLOWED_ORIGINS: "*"
+  LOG_LEVEL: "info"
+  WEB_CONCURRENCY: "4"

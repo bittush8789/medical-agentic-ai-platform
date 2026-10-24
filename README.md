@@ -140,8 +140,8 @@ Detailed technical guides and operational documentation are available in the [`d
 | [**🧠 Governance, Memory & Redis**](docs/GOVERNANCE_MEMORY_REDIS.md) | Agent Governance Toolkit (RBAC, kill-switch), LangMem, and Redis caching |
 | [**📊 Evaluation & Benchmarks**](docs/EVALUATION_AND_BENCHMARKS.md) | DeepEval & Ragas evaluation suite, 10 Golden Cases, and LangSmith tracing |
 | [**🐳 Deployment & Docker**](docs/DEPLOYMENT_AND_DOCKER.md) | Production Dockerfile, Compose orchestration, and security checklist |
-| [**📚 Ingestion & Knowledge Base**](docs/INGESTION_AND_KNOWLEDGE_BASE.md) | PyMuPDF parsing, deduplication chunking, and Pinecone vector store |
 | [**🛡️ Enterprise AI Security**](docs/AI_SECURITY.md) | OWASP Top 10 for LLMs, Anti-Poisoning Gate, Indirect Injections, and Exfiltration |
+| [**🚀 1M Users DevOps Runbook**](docs/UBUNTU_PRODUCTION_DEPLOYMENT.md) | Step-by-step Ubuntu setup for Terraform, AWS EKS, Helm 3, RDS, and CI/CD |
 
 ---
 

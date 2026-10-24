@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: medguide-prod
+  labels:
+    name: medguide-prod
+    environment: production
+    compliance: hipaa-ready

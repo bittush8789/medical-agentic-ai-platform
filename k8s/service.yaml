@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: medguide-service
+  namespace: medguide-prod
+  labels:
+    app: medguide-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: medguide-app

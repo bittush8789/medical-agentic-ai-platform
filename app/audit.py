@@ -110,28 +110,20 @@ def log_audit_event(
     except Exception as exc:
         print(f"Audit file write error: {exc}")
 
-    # 2. Record in SQLite audit_logs table
+    # 2. Record in Database (AWS RDS PostgreSQL or SQLite fallback)
     try:
-        with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
-            conn.execute(
-                """
-                INSERT INTO audit_logs 
-                (timestamp, event_type, conversation_id, model, status, latency_ms, tools_invoked, client_ip, details)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    now_utc,
-                    event_type,
-                    conversation_id,
-                    model,
-                    status,
-                    latency_ms,
-                    json.dumps(tools_invoked or []),
-                    client_ip,
-                    json.dumps(details or {}, ensure_ascii=False)
-                )
-            )
-            conn.commit()
+        from app.db import db
+        db.insert_audit_log(
+            timestamp=now_utc,
+            event_type=event_type,
+            conversation_id=conversation_id,
+            model=model,
+            status=status,
+            latency_ms=latency_ms,
+            tools_invoked=json.dumps(tools_invoked or []),
+            client_ip=client_ip,
+            details=json.dumps(details or {}, ensure_ascii=False)
+        )
     except Exception as exc:
         print(f"Audit DB insert error: {exc}")
 
@@ -140,43 +132,28 @@ def log_audit_event(
 
 def get_recent_audit_logs(limit: int = 50, event_type: str | None = None) -> list[dict[str, Any]]:
     """Retrieve recent audit events for observability and audit review."""
-    query = "SELECT timestamp, event_type, conversation_id, model, status, latency_ms, tools_invoked, client_ip, details FROM audit_logs"
-    params: list[Any] = []
-    
-    if event_type:
-        query += " WHERE event_type = ?"
-        params.append(event_type)
-
-    query += " ORDER BY id DESC LIMIT ?"
-    params.append(limit)
-
+    from app.db import db
+    rows = db.select_recent_audit_logs(limit=limit, event_type=event_type)
     results = []
-    try:
-        with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
-            conn.row_factory = sqlite3.Row
-            cursor = conn.execute(query, params)
-            for row in cursor.fetchall():
-                try:
-                    tools = json.loads(row["tools_invoked"]) if row["tools_invoked"] else []
-                except Exception:
-                    tools = []
-                try:
-                    details = json.loads(row["details"]) if row["details"] else {}
-                except Exception:
-                    details = {}
+    for row in rows:
+        try:
+            tools = json.loads(row["tools_invoked"]) if row.get("tools_invoked") else []
+        except Exception:
+            tools = []
+        try:
+            details = json.loads(row["details"]) if row.get("details") else {}
+        except Exception:
+            details = {}
 
-                results.append({
-                    "timestamp": row["timestamp"],
-                    "event_type": row["event_type"],
-                    "conversation_id": row["conversation_id"],
-                    "model": row["model"],
-                    "status": row["status"],
-                    "latency_ms": row["latency_ms"],
-                    "tools_invoked": tools,
-                    "client_ip": row["client_ip"],
-                    "details": details
-                })
-    except Exception as exc:
-        print(f"Failed to read audit logs: {exc}")
-
+        results.append({
+            "timestamp": row.get("timestamp"),
+            "event_type": row.get("event_type"),
+            "conversation_id": row.get("conversation_id"),
+            "model": row.get("model"),
+            "status": row.get("status"),
+            "latency_ms": row.get("latency_ms"),
+            "tools_invoked": tools,
+            "client_ip": row.get("client_ip"),
+            "details": details
+        })
     return results

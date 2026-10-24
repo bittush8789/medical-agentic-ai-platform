@@ -1,0 +1,15 @@
+apiVersion: v2
+name: medguide
+description: Enterprise Helm Chart for MedGuide AI — Multi-Model Medical Agentic Chatbot
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - medical-ai
+  - agentic-rag
+  - fastapi
+  - langgraph
+  - enterprise
+maintainers:
+  - name: MedGuide Engineering Team
+    email: devops@medguide.ai

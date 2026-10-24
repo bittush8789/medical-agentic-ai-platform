@@ -1,0 +1,27 @@
+# ==============================================================================
+# MedGuide AI — Production Variables Example
+# Copy to terraform.tfvars and customize for your AWS deployment
+# ==============================================================================
+
+aws_region              = "us-east-1"
+environment             = "production"
+vpc_cidr                = "10.0.0.0/16"
+
+# EKS Cluster Scaling
+cluster_name            = "medguide-prod-eks"
+kubernetes_version      = "1.30"
+eks_node_instance_types = ["m6i.xlarge", "m5.xlarge"]
+eks_min_nodes           = 3
+eks_desired_nodes       = 5
+eks_max_nodes           = 50
+
+# RDS PostgreSQL Multi-AZ
+db_name                 = "medguide_production"
+db_username             = "medguide_admin"
+db_instance_class       = "db.r6g.xlarge"
+db_allocated_storage    = 100
+db_max_allocated_storage= 1000
+
+# ElastiCache Redis Cluster
+redis_node_type         = "cache.m6g.large"
+redis_num_shards        = 3

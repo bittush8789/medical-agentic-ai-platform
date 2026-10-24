@@ -17,6 +17,7 @@ Welcome to the comprehensive technical documentation for **MedGuide AI**, an ent
 | [**7. Deployment & Docker**](DEPLOYMENT_AND_DOCKER.md) | Multi-stage Docker build, Docker Compose stack (FastAPI + Redis + Redis Commander), and production checklist. |
 | [**8. Ingestion & Knowledge Base**](INGESTION_AND_KNOWLEDGE_BASE.md) | PDF extraction with PyMuPDF, semantic chunking, SHA-256 deduplication, and Pinecone vector store indexing. |
 | [**9. Enterprise AI Security**](AI_SECURITY.md) | Comprehensive OWASP Top 10 for LLMs, Anti-Poisoning Gate, Indirect Injections, and Exfiltration Defenses. |
+| [**10. 1M Users Ubuntu DevOps Deployment**](UBUNTU_PRODUCTION_DEPLOYMENT.md) | End-to-end Ubuntu step-by-step setup for Terraform, AWS EKS, Helm 3, RDS PostgreSQL, and CI/CD. |
 
 ---
 
