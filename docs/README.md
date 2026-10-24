@@ -18,6 +18,10 @@ Welcome to the comprehensive technical documentation for **MedGuide AI**, an ent
 | [**8. Ingestion & Knowledge Base**](INGESTION_AND_KNOWLEDGE_BASE.md) | PDF extraction with PyMuPDF, semantic chunking, SHA-256 deduplication, and Pinecone vector store indexing. |
 | [**9. Enterprise AI Security**](AI_SECURITY.md) | Comprehensive OWASP Top 10 for LLMs, Anti-Poisoning Gate, Indirect Injections, and Exfiltration Defenses. |
 | [**10. 1M Users Ubuntu DevOps Deployment**](UBUNTU_PRODUCTION_DEPLOYMENT.md) | End-to-end Ubuntu step-by-step setup for Terraform, AWS EKS, Helm 3, RDS PostgreSQL, and CI/CD. |
+| [**11. Local Kubernetes Testing (Kind / Minikube)**](LOCAL_K8S_KIND_DEPLOYMENT.md) | Test full Kubernetes Helm stack locally on laptop without AWS cloud costs. |
+| [**12. Monitoring, Observability & Alerting**](MONITORING_PROMETHEUS_GRAFANA.md) | Prometheus, Grafana, Alertmanager rules, and AI telemetry dashboards (SLIs/SLOs). |
+| [**13. Disaster Recovery & Zero-Downtime Runbook**](DISASTER_RECOVERY_AND_RUNBOOK.md) | Multi-region failover, RDS PITR, Canary rollouts (Argo), and Sev-1/2 incident playbooks. |
+| [**14. Cloud Cost & FinOps Optimization**](COST_AND_FINOPS_OPTIMIZATION.md) | 66% AWS cost reduction guide via Karpenter, Spot Instances, Graviton3, and Token Caching. |
 
 ---
 

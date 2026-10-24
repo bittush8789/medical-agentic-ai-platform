@@ -146,6 +146,10 @@ Detailed technical guides and operational documentation are available in the [`d
 | [**🐳 Deployment & Docker**](docs/DEPLOYMENT_AND_DOCKER.md) | Production Dockerfile, Compose orchestration, and security checklist |
 | [**🛡️ Enterprise AI Security**](docs/AI_SECURITY.md) | OWASP Top 10 for LLMs, Anti-Poisoning Gate, Indirect Injections, and Exfiltration |
 | [**🚀 1M Users DevOps Runbook**](docs/UBUNTU_PRODUCTION_DEPLOYMENT.md) | Step-by-step Ubuntu setup for Terraform, AWS EKS, Helm 3, RDS, and CI/CD |
+| [**💻 Local K8s Development**](docs/LOCAL_K8S_KIND_DEPLOYMENT.md) | Local Kubernetes testing with Kind, Helm, Ingress, and HPA without AWS costs |
+| [**📊 Monitoring & Alerting**](docs/MONITORING_PROMETHEUS_GRAFANA.md) | Prometheus metrics, Grafana dashboards, Alertmanager rules, and AI telemetry |
+| [**🔄 Disaster Recovery Runbook**](docs/DISASTER_RECOVERY_AND_RUNBOOK.md) | Multi-Region failover, RDS PITR, Canary rollouts (Argo), and Sev-1/2 playbooks |
+| [**💰 Cloud FinOps & Optimization**](docs/COST_AND_FINOPS_OPTIMIZATION.md) | 66% AWS cost savings via Karpenter, Graviton3, Spot Instances, and Prompt Caching |
 
 ---
 
@@ -223,7 +227,11 @@ Medical-Agentic-Chatbot/
 │   ├── EVALUATION_AND_BENCHMARKS.md
 │   ├── DEPLOYMENT_AND_DOCKER.md
 │   ├── INGESTION_AND_KNOWLEDGE_BASE.md
-│   └── UBUNTU_PRODUCTION_DEPLOYMENT.md # 1M Users Ubuntu Runbook (EKS, Terraform, Helm)
+│   ├── UBUNTU_PRODUCTION_DEPLOYMENT.md # 1M Users Ubuntu Runbook (EKS, Terraform, Helm)
+│   ├── LOCAL_K8S_KIND_DEPLOYMENT.md    # Local Kubernetes testing with Kind & Helm
+│   ├── MONITORING_PROMETHEUS_GRAFANA.md # Prometheus, Grafana & Alertmanager setup
+│   ├── DISASTER_RECOVERY_AND_RUNBOOK.md # High Availability, PITR & Sev-1/2 playbooks
+│   └── COST_AND_FINOPS_OPTIMIZATION.md  # FinOps guide (Karpenter, Spot, Graviton)
 ├── helm/medguide/          # Production Helm 3 chart templates & values
 ├── k8s/                    # Kubernetes manifests (Namespace, Deployment, HPA, Ingress)
 ├── terraform/              # Infrastructure as Code (VPC, EKS, RDS, ElastiCache, ECR)
