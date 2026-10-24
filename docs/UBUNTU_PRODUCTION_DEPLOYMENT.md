@@ -4,6 +4,8 @@
 This guide provides end-to-end instructions for deploying **MedGuide AI** to serve **1,000,000+ active users** with 99.99% availability using the enterprise DevOps stack:
 **Terraform (IaC) + AWS EKS (Kubernetes 1.30) + Helm 3 + AWS RDS PostgreSQL (Multi-AZ) + AWS ElastiCache Redis + Docker + GitHub Actions CI/CD**.
 
+![AWS Cloud & DevOps Deployment Architecture](../assets/deployment_architecture.png)
+
 ---
 
 ## 📑 Table of Contents

@@ -2,6 +2,8 @@
 
 This document details the architectural principles, data flow, state machine mechanics, and component interactions that power **MedGuide AI**.
 
+![Application & System Design Architecture](../assets/system_architecture.png)
+
 ---
 
 ## 1. Architectural Philosophy

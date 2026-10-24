@@ -72,57 +72,61 @@ docker compose --profile debug up --build -d
 
 ---
 
-## 🏛️ System Architecture
+## 🏛️ System Design & Architecture
 
-```
-                                  [ Patient / User ]
-                                           │
-                                    (HTTPS / JSON)
-                                           ▼
-                 ┌──────────────────────────────────────────────────┐
-                 │             FastAPI Gateway Server               │
-                 │   - Bearer Authentication                        │
-                 │   - Sliding-Window Rate Limiting (Redis)         │
-                 │   - Sub-millisecond Response Cache (5ms)         │
-                 └─────────────────────────┬────────────────────────┘
-                                           │
-                      ┌────────────────────┴────────────────────┐
-                      ▼                                         ▼
-         ┌─────────────────────────┐               ┌─────────────────────────┐
-         │  Microsoft Presidio     │               │  NVIDIA NeMo Guardrails │
-         │  - PII / PHI Redaction  │               │  - Emergency Triage     │
-         │  - Names/MRN/Phones/SSN │               │  - Jailbreak Protection │
-         └────────────┬────────────┘               └────────────┬────────────┘
-                      │                                         │
-                      └────────────────────┬────────────────────┘
-                                           ▼
-                 ┌──────────────────────────────────────────────────┐
-                 │       LangMem Long-Term Patient Memory           │
-                 │   - Allergies, chronic conditions, medications   │
-                 └─────────────────────────┬────────────────────────┘
-                                           │
-                                           ▼
-                 ┌──────────────────────────────────────────────────┐
-                 │          LangGraph ReAct Medical Agent           │
-                 │   Retrieve (Pinecone) ──► Route ──► Tavily Web   │
-                 │   [Governed by Circuit Breaker & Tool Budgets]   │
-                 └─────────────────────────┬────────────────────────┘
-                                           │
-                                           ▼
-                 ┌──────────────────────────────────────────────────┐
-                 │       LLM Gateway & Automatic Fallback           │
-                 │   Primary (Gemini) ──► Claude 3.5 ──► GPT-4.1    │
-                 └─────────────────────────┬────────────────────────┘
-                                           │
-                                           ▼
-                 ┌──────────────────────────────────────────────────┐
-                 │          Output Safety & Compliance              │
-                 │   - Prescription & Dosage Blocker                │
-                 │   - Mandatory Clinical Disclaimer Enforcer       │
-                 │   - Structured HIPAA JSONL Audit Logger          │
-                 │   - DeepEval / Ragas & LangSmith Tracing         │
-                 └──────────────────────────────────────────────────┘
-```
+MedGuide AI is engineered as a production-grade Agentic AI platform built for clinical reliability, data security, high availability, and horizontal scalability.
+
+### 1. Application & Agentic System Design
+
+The diagram below illustrates the end-to-end runtime lifecycle of a patient query—from client ingestion, PII/PHI redaction, and multi-rail security inspection, through LangGraph state machine reasoning, multi-model gateway fallback, and persistent memory storage:
+
+![Application & System Design Architecture](assets/system_architecture.png)
+
+#### Architectural Layers:
+1. **Client & API Gateway Tier:**
+   - Interactive Web UI and Mobile Client communicate via secure HTTPS REST & SSE streaming APIs.
+   - FastAPI gateway server handles authentication, sliding-window rate limiting, and 5ms sub-millisecond cached response dispatching.
+2. **Security & Guardrails Perimeter (Defense-in-Depth):**
+   - **Microsoft Presidio:** Automatic regex + NLP tokenization to de-identify PII/PHI (Names, Phone Numbers, MRN, SSN, Credit Cards) before LLM prompt assembly.
+   - **NVIDIA NeMo Guardrails:** Millisecond-level emergency triage interception (chest pain, stroke symptoms, acute dyspnea), prescription blocking, and clinical disclaimer enforcement.
+   - **OWASP Anti-Injection Security Filter:** Neutralizes direct system prompt overrides, prompt exfiltration attacks, and indirect prompt injections lurking inside external PDF/RAG chunks.
+3. **Core Agentic Engine:**
+   - **FastAPI Core:** Async request handling and lifecycle orchestration.
+   - **LangGraph ReAct Agent:** Autonomous state machine orchestrating tool selection (`retrieve_knowledge` -> `search_medical_guidelines` -> `synthesize_answer`).
+   - **Multi-Model LLM Gateway:** Unified abstraction layer with automatic zero-downtime failover across **Google Gemini 2.5 Flash**, **Anthropic Claude 3.5 Sonnet**, and **OpenAI GPT-4o**.
+   - **Agent Governance & Circuit Breakers:** Hard tool execution budgets (max 5 calls/turn), role-based permissions, automated circuit breakers, and an administrative emergency kill-switch.
+4. **Memory & Knowledge Layer:**
+   - **LangMem Clinical Fact Memory:** Cross-session memory recalling patient allergies, chronic conditions, and past medications (guarded by an Anti-Poisoning Gate).
+   - **Redis 7 In-Memory Cache:** Sub-millisecond response caching and session state management with automatic in-memory fallback.
+   - **Pinecone Hybrid Vector Database:** Serverless cosine similarity search across indexed clinical medical encyclopedias.
+   - **Tavily Medical Search:** Live medical research fallback for real-time epidemiological and guideline updates.
+
+---
+
+### 2. Cloud & Production DevOps Deployment Architecture (1M Users Scale)
+
+To serve **1 Million Users (~50,000 DAU, 30-50 peak QPS)** with 99.99% uptime, MedGuide AI deploys across AWS using modern Infrastructure-as-Code (Terraform), container orchestration (Amazon EKS & Helm 3), and multi-AZ managed data stores:
+
+![AWS Cloud & DevOps Deployment Architecture](assets/deployment_architecture.png)
+
+#### Infrastructure & DevOps Components:
+1. **Edge & Traffic Layer (HTTPS/TLS):**
+   - **Amazon Route 53:** Global DNS routing with health-check failover.
+   - **AWS CloudFront CDN & AWS WAF:** Edge caching of static frontend assets, DDoS mitigation, and OWASP Web Application Firewall rules.
+   - **AWS Application Load Balancer (ALB Ingress):** SSL/TLS termination, HTTP/2 multiplexing, and 120s idle timeout for uninterrupted Server-Sent Events (SSE) token streaming.
+2. **Kubernetes Compute Layer (Amazon EKS):**
+   - Highly available EKS cluster spread across **3 Availability Zones (AZ-a, AZ-b, AZ-c)**.
+   - **EKS Worker Node Groups:** Autoscaled managed node groups (`m5.xlarge` instances) running inside secure Private App Subnets.
+   - **Horizontal Pod Autoscaler (HPA):** Dynamically scales application pods from **5 to 50 replicas** based on CPU/Memory thresholds (70% target utilization).
+   - **Dockerized Multi-Stage Containers:** Lean Python 3.11-slim images running Gunicorn ASGI multi-workers with Uvicorn.
+3. **Storage & In-Memory Caching Tier:**
+   - **Amazon RDS PostgreSQL (Multi-AZ):** Active/Standby automated replication across private data subnets, integrated with **PgBouncer** connection pooling for high-concurrency patient fact storage.
+   - **Amazon ElastiCache for Redis:** Multi-node cluster with in-transit TLS encryption for sub-millisecond response caching and distributed rate limiting.
+4. **CI/CD & Infrastructure as Code (IaC) Pipeline:**
+   - **Terraform:** Complete declarative IaC managing VPC, Subnets, Security Groups, EKS, RDS, ElastiCache, ECR, and IAM Roles for Service Accounts (IRSA).
+   - **GitHub Actions CI/CD:** Automated pipeline triggered on pull requests and commits to `main`—running unit tests, Aqua Trivy container security scans, building and pushing images to **Amazon ECR**, and executing zero-downtime rolling upgrades via **Helm 3 Charts**.
+5. **Observability & Operations:**
+   - Structured JSON audit logging exported to **Amazon CloudWatch**, with **Prometheus & Grafana** metrics dashboards and AWS IAM Least-Privilege access management.
 
 ---
 
@@ -187,10 +191,13 @@ python eval.py --latest
 
 ```
 Medical-Agentic-Chatbot/
+├── .github/workflows/
+│   └── deploy.yml          # GitHub Actions CI/CD (Tests -> Trivy -> ECR -> EKS Helm)
 ├── app/
 │   ├── agent.py            # LangGraph ReAct Agent (Retrieve -> Route -> Answer)
-│   ├── audit.py            # HIPAA-compliant JSONL & SQLite audit logger
+│   ├── audit.py            # HIPAA-compliant JSONL & RDS PostgreSQL audit logger
 │   ├── config.py           # Pydantic environment configuration
+│   ├── db.py               # Enterprise Dual-Driver Connection Pool (RDS Postgres + SQLite)
 │   ├── evaluation.py       # DeepEval & Ragas benchmark engine
 │   ├── governance.py       # Agent Governance Toolkit (RBAC, budgets, kill-switch)
 │   ├── guardrails.py       # Presidio PII masking & NeMo Guardrails
@@ -200,23 +207,31 @@ Medical-Agentic-Chatbot/
 │   ├── memory.py           # LangMem long-term patient clinical memory
 │   ├── redis_client.py     # Redis caching layer with in-memory fallback
 │   └── security.py         # Enterprise AI Security Engine (OWASP Top 10 for LLMs)
+├── assets/                 # Architecture diagrams and design assets
+│   ├── system_architecture.png       # Application & Agentic System Design
+│   └── deployment_architecture.png   # AWS Cloud & 1M Scale DevOps Infrastructure
 ├── data/
 │   └── medical_book.pdf    # Clinical reference encyclopedia PDF
 ├── docs/                   # Comprehensive technical documentation hub
 │   ├── README.md           # Documentation index
-│   ├── ARCHITECTURE.md     # System design & Mermaid diagrams
-│   ├── API_REFERENCE.md    # Full REST API specifications
+│   ├── ARCHITECTURE.md     # In-depth system design & Mermaid state machine
+│   ├── API_REFERENCE.md    # Full REST API specifications & curl examples
 │   ├── AI_SECURITY.md      # Enterprise AI Security & OWASP mitigations
 │   ├── GUARDRAILS_AND_SAFETY.md
 │   ├── LLM_GATEWAY.md
 │   ├── GOVERNANCE_MEMORY_REDIS.md
 │   ├── EVALUATION_AND_BENCHMARKS.md
 │   ├── DEPLOYMENT_AND_DOCKER.md
-│   └── INGESTION_AND_KNOWLEDGE_BASE.md
+│   ├── INGESTION_AND_KNOWLEDGE_BASE.md
+│   └── UBUNTU_PRODUCTION_DEPLOYMENT.md # 1M Users Ubuntu Runbook (EKS, Terraform, Helm)
+├── helm/medguide/          # Production Helm 3 chart templates & values
+├── k8s/                    # Kubernetes manifests (Namespace, Deployment, HPA, Ingress)
+├── terraform/              # Infrastructure as Code (VPC, EKS, RDS, ElastiCache, ECR)
 ├── static/                 # Frontend CSS and JavaScript
 ├── templates/              # Chatbot web interface (HTML)
 ├── Dockerfile              # Multi-stage production container build
 ├── docker-compose.yml      # Orchestration (FastAPI + Redis 7 + Admin UI)
+├── gunicorn_conf.py        # Production ASGI multi-worker process manager
 ├── eval.py                 # CLI benchmark runner
 ├── ingest.py               # PDF knowledge base indexing script
 └── requirements.txt        # Python dependencies
