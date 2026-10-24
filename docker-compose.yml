@@ -1,0 +1,107 @@
+# ==============================================================================
+# MedGuide AI — Docker Compose Production Stack
+# Services: FastAPI App + Redis Cache + Redis Commander (Admin UI)
+# ==============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # Redis: High-performance caching, rate limiting, and session layer
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: medguide-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+      --save 60 1000
+      --tcp-keepalive 60
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - medguide-net
+
+  # --------------------------------------------------------------------------
+  # MedGuide AI: FastAPI Medical Agentic Chatbot
+  # --------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medguide-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override Redis URL to point to the Redis container service
+      - REDIS_URL=redis://redis:6379/0
+      - ENABLE_REDIS_CACHE=true
+      # Allow all origins in Docker (restrict in production)
+      - ALLOWED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000
+    volumes:
+      # Persist audit logs outside the container
+      - ./logs:/app/logs
+      # Persist SQLite databases (medical memory, audit, checkpoints)
+      - medguide_data:/app/data_persist
+      # Mount medical reference PDF (read-only)
+      - ./data:/app/data:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - medguide-net
+
+  # --------------------------------------------------------------------------
+  # Redis Commander: Optional web-based Redis admin UI (dev/debug only)
+  # Access at http://localhost:8081
+  # --------------------------------------------------------------------------
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: medguide-redis-ui
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles:
+      - debug
+    networks:
+      - medguide-net
+
+# ----------------------------------------------------------------------------
+# Persistent Volumes
+# ----------------------------------------------------------------------------
+volumes:
+  redis_data:
+    driver: local
+  medguide_data:
+    driver: local
+
+# ----------------------------------------------------------------------------
+# Internal Network
+# ----------------------------------------------------------------------------
+networks:
+  medguide-net:
+    driver: bridge

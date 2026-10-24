@@ -1,0 +1,73 @@
+# ==============================================================================
+# MedGuide AI — Docker Build Exclusions
+# ==============================================================================
+
+# Version control
+.git
+.gitignore
+
+# Python artifacts
+__pycache__/
+*.py[codz]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment secrets (never bake into image)
+.env
+.env.local
+.env.production
+
+# Docker files (no recursive build)
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+
+# Logs (mounted as volume, not baked in)
+logs/
+*.log
+
+# SQLite databases (runtime state, not build-time)
+*.db
+*.db-shm
+*.db-wal
+
+# Documentation and non-runtime files
+docs/
+*.md
+!README.md
+LICENSE
+
+# Testing and evaluation artifacts
+test.py
+.deepeval/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Misc
+*.bak
+*.tmp
+*.temp
+node_modules/

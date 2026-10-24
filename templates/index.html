@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MedGuide AI — Multi-Model Medical Agent</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>✚ MedGuide AI</h1>
+        <p>Agentic Medical Assistant • LiteLLM (Gemini / Claude / OpenAI) • Pinecone • Tavily</p>
+      </div>
+      <div class="header-right">
+        <span id="status">Checking...</span>
+      </div>
+    </header>
+
+    <div class="notice">
+      ⚠️ Educational guidance only. Not a formal diagnosis. For severe symptoms, contact emergency medical services immediately.
+    </div>
+
+    <section id="messages" aria-live="polite">
+      <article class="bot">
+        Hello! I'm MedGuide AI powered by LiteLLM. You can ask medical questions, select your preferred model (Google Gemini, Anthropic Claude, or OpenAI), upload clinical images, or use your microphone for voice queries.
+      </article>
+    </section>
+
+    <div id="preview" hidden>
+      <img id="thumbnail" alt="Selected image">
+      <button id="remove" type="button">Remove image ×</button>
+    </div>
+
+    <form id="chatForm">
+      <textarea id="message" placeholder="Describe your symptoms or ask a question..." rows="2" required maxlength="4000"></textarea>
+      
+      <div class="toolbar">
+        <div class="model-picker">
+          <label for="modelSelect" class="sr-only">Model:</label>
+          <select id="modelSelect" class="action model-select" title="Choose AI Provider / Model">
+            <option value="gemini/gemini-2.5-flash">✨ Gemini 3.8 / 2.5 Flash</option>
+            <option value="gemini/gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
+            <option value="claude-3-5-sonnet-20241022">🧠 Claude 3.5 Sonnet</option>
+            <option value="claude-3-5-haiku-20241022">⚡ Claude 3.5 Haiku</option>
+            <option value="gpt-4.1-mini" selected>🤖 GPT-4.1 Mini</option>
+            <option value="gpt-4o-mini">🤖 GPT-4o Mini</option>
+          </select>
+        </div>
+
+        <label class="action" for="image">📎 Image</label>
+        <input id="image" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        
+        <button class="action" id="camera" type="button">📷 Camera</button>
+        <button class="action" id="mic" type="button">🎤 Voice</button>
+        <button class="action" id="listen" type="button">🔊 Read answer</button>
+        <button id="send" type="submit">Send ➜</button>
+      </div>
+    </form>
+
+    <details>
+      <summary>API Settings & Model Info</summary>
+      <div class="details-content">
+        <input id="token" type="password" placeholder="API_TOKEN (if configured in .env)">
+        <div id="providerStatus" class="provider-badges"></div>
+      </div>
+    </details>
+
+    <video id="video" autoplay playsinline hidden></video>
+    <div id="cameraActions" hidden>
+      <button id="snap" type="button">Capture</button>
+      <button id="closeCamera" type="button">Close camera</button>
+    </div>
+    <canvas id="canvas" hidden></canvas>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
